@@ -2,7 +2,7 @@
   "name": "Sistema Gestión",
   "short_name": "Gestión",
   "description": "Sistema de gestión empresarial — compras, ventas, cuentas corrientes y flujo de fondos",
-  "start_url": "/",
+  "start_url": "/sistema-gestion/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#0f2d0a",
