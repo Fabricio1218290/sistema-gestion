@@ -406,9 +406,37 @@ tr:hover td{background:#f8faff;transition:background .1s}
   .fg,.fg3{grid-template-columns:1fr}.s2,.s3{grid-column:span 1}.kpis{grid-template-columns:1fr 1fr}
   .wrap{padding:16px}
 }
+/* ===== LOGIN ===== */
+#pg-login{position:fixed;inset:0;background:linear-gradient(135deg,#1a2e1a 0%,#1a3a5c 100%);display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:0}
+#pg-login.hide{display:none}
+.login-box{background:#fff;border-radius:16px;padding:36px 40px;width:340px;box-shadow:0 8px 40px rgba(0,0,0,.35);text-align:center}
+.login-logo{font-size:40px;margin-bottom:8px}
+.login-title{font-size:20px;font-weight:800;color:#1a3a1a;margin-bottom:4px;letter-spacing:.3px}
+.login-sub{font-size:12px;color:#888;margin-bottom:24px}
+.login-lbl{font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.5px;text-align:left;margin-bottom:5px}
+.login-inp{width:100%;border:1.5px solid #ccd8e8;border-radius:8px;padding:11px 14px;font-size:15px;color:#222;background:#f7fafd;font-family:inherit;text-align:center;letter-spacing:3px;margin-bottom:6px;outline:none}
+.login-inp:focus{border-color:#1a4a7a;box-shadow:0 0 0 3px rgba(26,74,122,.1)}
+.login-err{font-size:12px;color:#c0392b;min-height:16px;margin-bottom:10px;font-weight:600}
+.login-btn{width:100%;padding:12px;background:linear-gradient(135deg,#1a4a7a,#1e6b4a);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px}
+.login-btn:hover{opacity:.92}
+.login-ver{font-size:10px;color:#bbb;margin-top:18px}
 </style>
 </head>
 <body>
+<!-- LOGIN -->
+<div id="pg-login">
+  <div class="login-box">
+    <div class="login-logo">🌾</div>
+    <div class="login-title">SISTEMA GESTIÓN</div>
+    <div class="login-sub">Ingrese su contraseña para continuar</div>
+    <div class="login-lbl">Contraseña</div>
+    <input class="login-inp" id="login-pwd" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')loginCheck()">
+    <div class="login-err" id="login-err"></div>
+    <button class="login-btn" onclick="loginCheck()">→ Ingresar</button>
+    <div class="login-ver">Sistema de Gestión Empresarial · 2026</div>
+  </div>
+</div>
+
 <!-- HIDDEN LEGACY ELEMENTS -->
 <header style="display:none">
   <h1>SISTEMA GESTION</h1>
@@ -497,7 +525,7 @@ tr:hover td{background:#f8faff;transition:background .1s}
   <span id="topbar-title">Nueva Factura</span>
   <div id="topbar-actions">
     <button onclick="oM('m-config')" title="Configuración">⚙ Config</button>
-    <button onclick="if(confirm('¿Salir del sistema?')){window.close();}" title="Salir" style="background:#c0392b;color:#fff;border:none;border-radius:6px;padding:5px 13px;font-size:12px;font-weight:700;cursor:pointer;margin-left:6px">✕ Salir</button>
+    <button onclick="loginSalir()" title="Salir del sistema" style="background:#c0392b;color:#fff;border:none;border-radius:6px;padding:5px 13px;font-size:12px;font-weight:700;cursor:pointer;margin-left:6px">✕ Salir</button>
   </div>
 </div>
 <div class="wrap">
@@ -2486,6 +2514,16 @@ tr:hover td{background:#f8faff;transition:background .1s}
         <div style="font-size:13px;font-weight:500;margin-bottom:4px">Exportar CSV</div>
         <div style="font-size:12px;color:var(--txt2);margin-bottom:9px">Exporta el libro de compras en formato CSV para abrir en Excel.</div>
         <button class="btn" onclick="exportCSV();cM(&#39;m-config&#39;)">⬇ Exportar CSV</button>
+      </div>
+    </div>
+      <div style="padding:13px;background:var(--bg2);border-radius:var(--rad);border:0.5px solid var(--brd)">
+        <div style="font-size:13px;font-weight:500;margin-bottom:4px">Cambiar contraseña</div>
+        <div style="font-size:12px;color:var(--txt2);margin-bottom:9px">Modifica la clave de acceso al sistema. Queda guardada en este dispositivo.</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="cfg-pwd-nueva" type="password" placeholder="Nueva contraseña" style="flex:1;border:1px solid var(--brd);border-radius:6px;padding:6px 10px;font-size:13px;background:var(--bg);color:var(--txt)">
+          <button class="btn" onclick="loginCambiarClave()" style="color:var(--grn);border-color:var(--grn);white-space:nowrap">✓ Guardar</button>
+        </div>
+        <div id="cfg-pwd-msg" style="font-size:11px;margin-top:5px;min-height:14px"></div>
       </div>
     </div>
     <div class="fb"><button class="btn" onclick="cM(&#39;m-config&#39;)">Cerrar</button></div>
@@ -5462,6 +5500,60 @@ function confirmarConversion(){
 }
 
 // ---- UTILS ----
+// ===== LOGIN / SESIÓN =====
+const LOGIN_KEY = 'sg_session';
+const PWD_KEY   = 'sg_pwd';
+const DEFAULT_PWD = 'admin123';
+
+function loginInit() {
+  const pwd = localStorage.getItem(PWD_KEY) || DEFAULT_PWD;
+  // Si ya hay sesión activa, ocultar login
+  if (localStorage.getItem(LOGIN_KEY) === 'ok') {
+    document.getElementById('pg-login').classList.add('hide');
+  } else {
+    document.getElementById('pg-login').classList.remove('hide');
+    setTimeout(()=>document.getElementById('login-pwd').focus(), 100);
+  }
+}
+
+function loginCheck() {
+  const pwd = localStorage.getItem(PWD_KEY) || DEFAULT_PWD;
+  const val = document.getElementById('login-pwd').value;
+  const err = document.getElementById('login-err');
+  if (!val) { err.textContent = 'Ingrese la contraseña'; return; }
+  if (val === pwd) {
+    localStorage.setItem(LOGIN_KEY, 'ok');
+    document.getElementById('pg-login').classList.add('hide');
+    document.getElementById('login-pwd').value = '';
+    err.textContent = '';
+  } else {
+    err.textContent = 'Contraseña incorrecta';
+    document.getElementById('login-pwd').value = '';
+    document.getElementById('login-pwd').focus();
+  }
+}
+
+function loginSalir() {
+  if (!confirm('¿Salir del sistema?')) return;
+  localStorage.removeItem(LOGIN_KEY);
+  document.getElementById('login-pwd').value = '';
+  document.getElementById('login-err').textContent = '';
+  document.getElementById('pg-login').classList.remove('hide');
+  setTimeout(()=>document.getElementById('login-pwd').focus(), 100);
+}
+
+function loginCambiarClave() {
+  const nueva = document.getElementById('cfg-pwd-nueva').value.trim();
+  const msg   = document.getElementById('cfg-pwd-msg');
+  if (!nueva || nueva.length < 4) { msg.style.color='#c0392b'; msg.textContent='Mínimo 4 caracteres'; return; }
+  localStorage.setItem(PWD_KEY, nueva);
+  document.getElementById('cfg-pwd-nueva').value = '';
+  msg.style.color='#27ae60';
+  msg.textContent='✓ Contraseña actualizada';
+  setTimeout(()=>msg.textContent='', 3000);
+}
+// ===========================
+
 function oM(id){
   if(id==='m-ejercicios'){renderEjLista();}
   if(id==='m-adelanto'){
@@ -9972,6 +10064,7 @@ function delLiquidacion(id){
 }
 
 async function init(){
+  loginInit();
   // ---- Mostrar pantalla de carga ----
   const overlay=document.createElement('div');
   overlay.id='_loading_overlay';
