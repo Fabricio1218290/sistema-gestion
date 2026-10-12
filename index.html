@@ -28,6 +28,93 @@ async function supaGuardar(payload) {
     _rowId = data.id;
   }
 }
+
+async function importarDesdeBackup(d) {
+  // Mapea el JSON del .txt al formato de Supabase
+  const payload = {
+    facturas: d.facturas||[],
+    cheques: d.cheques||[],
+    cuentas: d.cuentas||[],
+    movimientos: d.movimientos||[],
+    notas_credito: d.notasCredito||[],
+    ventas: d.ventas||[],
+    pagos_registrados: d.pagosRegistrados||[],
+    ejercicios: d.ejercicios||[],
+    ej_activo: d.ejActivo||'2026',
+    proveedores_cat: d.proveedoresCat||[],
+    clientes_cat: d.clientesCat||[],
+    articulos_compra: d.articulosCompra||[],
+    articulos_venta: d.articulosVenta||[],
+    lotes: d.lotes||[],
+    campos: d.campos||[],
+    creditos: d.creditos||[],
+    empleados: d.empleados||[],
+    liquidaciones: d.liquidaciones||[],
+    adelantos: d.adelantos||[],
+    gastos_sf: d.gastosSF||[],
+    mov_tarjetas: d.movTarjetas||[],
+    mov_stock: d.movStock||[],
+    ordenes_t: d.ordenesT||[],
+    presentaciones: d.PRESENTACIONES||[],
+    nx_f: d.nxF||1, nx_c: d.nxC||1, nx_cu: d.nxCu||1,
+    nx_mov: d.nxMov||1, nx_nc: d.nxNC||1, nx_v: d.nxV||1,
+    nx_pago: d.nxPago||1, nx_prov: d.nxProv||1, nx_cli: d.nxCli||1,
+    nx_art_c: d.nxArtC||1, nx_art_v: d.nxArtV||1, nx_lote: d.nxLote||1,
+    nx_campo: d.nxCampo||1, nx_cred: d.nxCred||1, nx_emp: d.nxEmp||1,
+    nx_liq: d.nxLiq||1, nx_adel: d.nxAdel||1, nx_gasto_sf: d.nxGastoSF||1,
+    nx_mov_tarjeta: d.nxMovTarjeta||1, nx_mov_s: d.nxMovS||1, nx_ot: d.nxOT||1,
+    version: 1
+  };
+  // Borrar fila existente si hay, e insertar fresca
+  if (_rowId) {
+    await _supa.from('sistema_datos').delete().eq('id', _rowId);
+    _rowId = null;
+  }
+  const {data, error} = await _supa.from('sistema_datos').insert([payload]).select().single();
+  if (error) throw error;
+  _rowId = data.id;
+  return payload;
+}
+
+function mostrarDialogoImportar() {
+  const html = `<div id="dlg-import" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:16px;padding:32px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+      <div style="font-size:18px;font-weight:700;color:#1a1d23;margin-bottom:8px">Importar datos desde backup</div>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:20px">Seleccioná el archivo <b>.txt</b> de respaldo del sistema para cargar todos los datos a Supabase.</div>
+      <input type="file" id="imp-file" accept=".txt,.json" style="display:block;margin-bottom:16px;font-size:13px;width:100%;padding:10px;border:1px dashed #d1d5db;border-radius:8px;cursor:pointer">
+      <div id="imp-status" style="font-size:13px;min-height:20px;margin-bottom:16px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="document.getElementById('dlg-import').remove()" style="padding:9px 18px;border:1px solid #d1d5db;border-radius:8px;background:#fff;cursor:pointer;font-size:13px">Cancelar</button>
+        <button id="imp-btn" onclick="ejecutarImportacion()" style="padding:9px 18px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">Importar</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+async function ejecutarImportacion() {
+  const f = document.getElementById('imp-file').files[0];
+  const st = document.getElementById('imp-status');
+  const btn = document.getElementById('imp-btn');
+  if (!f) { st.textContent='Seleccioná un archivo primero.'; return; }
+  btn.disabled = true;
+  st.innerHTML = '<span style="color:#2563eb">⏳ Leyendo archivo...</span>';
+  try {
+    const text = await f.text();
+    const d = JSON.parse(text);
+    st.innerHTML = '<span style="color:#2563eb">⏳ Subiendo datos a Supabase...</span>';
+    await importarDesdeBackup(d);
+    st.innerHTML = '<span style="color:#16a34a">✅ ¡Datos importados exitosamente!</span>';
+    btn.textContent = 'Listo';
+    setTimeout(() => {
+      document.getElementById('dlg-import').remove();
+      location.reload();
+    }, 1500);
+  } catch(e) {
+    st.innerHTML = '<span style="color:#dc2626">❌ Error: ' + e.message + '</span>';
+    btn.disabled = false;
+  }
+}
 // ===========================
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7871,7 +7958,7 @@ function importarDatos(event){
   const file=event.target.files[0];
   if(!file)return;
   const reader=new FileReader();
-  reader.onload=function(e){
+  reader.onload=async function(e){
     try{
       const d=JSON.parse(e.target.result);
       if(!d.facturas||!d.cheques){alert('Archivo inválido. Seleccioná un archivo exportado desde este sistema.');return;}
@@ -7934,9 +8021,18 @@ function importarDatos(event){
       // Presentaciones
       if(d.PRESENTACIONES&&d.PRESENTACIONES.length) PRESENTACIONES=d.PRESENTACIONES;
       saveAll();
-      const activo=document.querySelector('.nb.on');
-      if(activo){const pg=activo.getAttribute('onclick').replace("go('","").replace("')","");go(pg);}
-      alert(`Datos importados correctamente.\n${d.facturas.length} factura(s) y ${d.cheques.length} cheque(s) cargados.`);
+      // Guardar también en Supabase (nube)
+      try {
+        await importarDesdeBackup(d);
+        const activo=document.querySelector('.nb.on');
+        if(activo){const pg=activo.getAttribute('onclick').replace("go('","").replace("')","");go(pg);}
+        alert(`Datos importados correctamente.\n${d.facturas.length} factura(s) cargadas.\n✅ Guardado en Supabase (nube).`);
+      } catch(supErr) {
+        console.error('Error Supabase:', supErr);
+        const activo=document.querySelector('.nb.on');
+        if(activo){const pg=activo.getAttribute('onclick').replace("go('","").replace("')","");go(pg);}
+        alert(`Datos importados en memoria.\n${d.facturas.length} factura(s) cargadas.\n⚠️ No se pudo guardar en la nube: ${supErr.message}`);
+      }
     }catch(err){alert('Error al leer el archivo. Asegurate de que sea un archivo exportado desde este sistema.');}
     event.target.value='';
   };
