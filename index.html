@@ -772,7 +772,7 @@ tr:hover td{background:#f8faff;transition:background .1s}
       </div>
     </div>
     <div class="tw"><table>
-      <thead><tr><th>Proveedor</th><th>N° Factura</th><th>Concepto</th><th>Notas</th><th>Categoría</th><th>Emisión</th><th>Vencimiento</th><th>Mon.</th><th style="text-align:right">Importe</th><th style="text-align:right">Pagado</th><th style="text-align:right">Saldo</th><th>Estado</th><th></th></tr></thead>
+      <thead><tr><th>Proveedor</th><th>N° Factura</th><th>Concepto</th><th>Notas</th><th style="min-width:200px">Productos / Items</th><th>Emisión</th><th>Vencimiento</th><th>Mon.</th><th style="text-align:right">Importe</th><th style="text-align:right">Pagado</th><th style="text-align:right">Saldo</th><th>Estado</th><th></th></tr></thead>
       <tbody id="tb-libro"></tbody>
     </table></div>
     <div id="lib-paginacion"></div>
@@ -3826,12 +3826,19 @@ function renderLibro(){
     const ci=CATS.indexOf(catEfectiva);
     const catB=ci>=0?`<span class="badge" style="background:${CB[ci]};color:${CC[ci]}">${CATS_ICONS[catEfectiva]||''} ${catEfectiva}</span>`:`<span class="badge" style="background:var(--bg2);color:var(--txt2)">${catEfectiva||'—'}</span>`;
     const esG=f.grupo&&rows.filter(r=>r.grupo===f.grupo).length>1;
+    // Items: mostrar desc + cant + unidad de cada item
+    const itemsHTML=f.items&&f.items.length
+      ? f.items.map(it=>{
+          const cant=it.cant?`<span style="color:var(--txt2);font-size:11px"> × ${fNp(it.cant)} ${it.present||''}</span>`:'';
+          return `<div style="font-size:12px;line-height:1.4">${it.desc||it.nombre||'—'}${cant}</div>`;
+        }).join('')
+      : `<span style="font-size:12px;color:var(--txt2)">${f.nota||'—'}</span>`;
     return `<tr style="${esG?'border-left:3px solid var(--amb);':''}">
       <td style="font-weight:500;white-space:nowrap">${f.prov}</td>
       <td style="font-family:monospace;font-size:12px;white-space:nowrap">${f.nro}</td>
       <td style="font-size:12px;color:var(--txt2);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${f.nota||''}">${f.nota||'—'}</td>
       <td style="font-size:12px;color:var(--txt2);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${f.obs||''}">${f.obs||'—'}</td>
-      <td>${catB}</td><td>${fD(f.emis)}</td><td>${fD(f.venc)}</td><td>${f.mon}</td>
+      <td style="max-width:250px">${itemsHTML}</td><td>${fD(f.emis)}</td><td>${fD(f.venc)}</td><td>${f.mon}</td>
       <td style="text-align:right">${fNp(f.imp)}</td>
       <td style="text-align:right;color:var(--grn)">${fNp(f.pag)}</td>
       <td style="text-align:right;font-weight:600;color:${e==='pagado'?'var(--grn)':'var(--red)'}">${fNp(s)}</td>
