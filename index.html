@@ -890,6 +890,7 @@ tr:hover td{background:#f8faff;transition:background .1s}
           <option value="rubro">Compras totales por rubro / categoría</option>
           <option value="mensual">Evolución mensual de compras</option>
           <option value="movs">Movimientos de cuentas por período</option>
+          <option value="detalle-compras">📋 Detalle completo de compras por período</option>
         </select>
       </div>
       <div class="fr"><label>Desde</label><input type="date" id="rp-desde" onchange="renderReportes()"></div>
@@ -5137,6 +5138,98 @@ function renderReportes(){
           <td style="text-align:right;font-weight:600;color:${m.tipo==='ingreso'?'var(--grn)':'var(--red)'}">
             ${m.tipo==='ingreso'?'+':'-'}${cu?sym(cu.mon):'$'} ${fNp(m.imp)}</td></tr>`;
       }).join(''):`<tr><td colspan="6" class="empty">Sin movimientos en el período</td></tr>`}</tbody></table></div></div>`;
+    return;
+  }
+
+  if(tipo==='detalle-compras'){
+    const desde=document.getElementById('rp-desde').value||'';
+    const hasta=document.getElementById('rp-hasta').value||'';
+    const monFil=document.getElementById('rp-mon').value||'';
+    const estFil=document.getElementById('rp-est').value||'';
+    let rows=facturas.filter(f=>{
+      if(desde&&(f.emis||'')!==''&&f.emis<desde)return false;
+      if(hasta&&(f.emis||'')!==''&&f.emis>hasta)return false;
+      if(monFil&&f.mon!==monFil)return false;
+      if(estFil&&estF(f)!==estFil)return false;
+      return true;
+    }).sort((a,b)=>(a.emis||'').localeCompare(b.emis||''));
+
+    // Agrupar por rubro
+    const porRubro={};
+    rows.forEach(f=>{
+      const cat=f.cat||f.items?.find(it=>it.cat||it.grupo)?.cat||f.items?.find(it=>it.cat||it.grupo)?.grupo||'Sin categoría';
+      if(!porRubro[cat])porRubro[cat]=[];
+      porRubro[cat].push(f);
+    });
+
+    const periodo=desde||hasta?`${desde?fD(desde):'inicio'} — ${hasta?fD(hasta):'hoy'}`:'Todo el período';
+    const totUYU=rows.filter(f=>f.mon==='UYU').reduce((s,f)=>s+f.imp,0);
+    const totUSD=rows.filter(f=>f.mon==='USD').reduce((s,f)=>s+f.imp,0);
+    const saldUYU=rows.filter(f=>f.mon==='UYU').reduce((s,f)=>s+saldo(f),0);
+    const saldUSD=rows.filter(f=>f.mon==='USD').reduce((s,f)=>s+saldo(f),0);
+
+    let html=`<h3 style="margin-bottom:12px">📋 Detalle de compras — ${periodo}</h3>
+    <div class="kpis" style="margin-bottom:16px">
+      <div class="kpi"><div class="kl">Facturas</div><div class="kv blu">${rows.length}</div></div>
+      <div class="kpi"><div class="kl">Total UYU</div><div class="kv red">$ ${fNp(totUYU)}</div></div>
+      <div class="kpi"><div class="kl">Total USD</div><div class="kv red">U$S ${fNp(totUSD)}</div></div>
+      <div class="kpi"><div class="kl">Saldo pend. UYU</div><div class="kv amb">$ ${fNp(saldUYU)}</div></div>
+      <div class="kpi"><div class="kl">Saldo pend. USD</div><div class="kv amb">U$S ${fNp(saldUSD)}</div></div>
+    </div>`;
+
+    if(!rows.length){html+='<div class="empty">Sin compras en el período seleccionado</div>';cont.innerHTML=html;return;}
+
+    Object.keys(porRubro).sort().forEach(cat=>{
+      const fs=porRubro[cat];
+      const stUYU=fs.filter(f=>f.mon==='UYU').reduce((s,f)=>s+f.imp,0);
+      const stUSD=fs.filter(f=>f.mon==='USD').reduce((s,f)=>s+f.imp,0);
+      const uid='rub-'+cat.replace(/\W/g,'_');
+      html+=`<div style="margin-bottom:12px">
+        <div onclick="const el=document.getElementById('${uid}');el.style.display=el.style.display==='none'?'':'none';this.querySelector('.arr').textContent=el.style.display==='none'?'▶':'▼'"
+          style="background:#eef0f2;padding:9px 14px;border-radius:var(--rad);cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;border:1px solid var(--brd)">
+          <span style="font-weight:700;font-size:13px">${CATS_ICONS[cat]||''} ${cat} <span style="font-weight:400;color:var(--txt2);font-size:12px">(${fs.length} fact.)</span></span>
+          <span style="display:flex;gap:16px;align-items:center">
+            ${stUYU?`<span style="font-size:12px;font-weight:600;color:var(--red)">$ ${fNp(stUYU)}</span>`:''}
+            ${stUSD?`<span style="font-size:12px;font-weight:600;color:var(--red)">U$S ${fNp(stUSD)}</span>`:''}
+            <span class="arr" style="font-size:12px;color:var(--txt2)">▼</span>
+          </span>
+        </div>
+        <div id="${uid}" style="border:1px solid var(--brd);border-top:none;border-radius:0 0 var(--rad) var(--rad);overflow:hidden">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--bg2)">
+              <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--brd)">Proveedor</th>
+              <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--brd)">N° Factura</th>
+              <th style="padding:6px 10px;text-align:left;border-bottom:1px solid var(--brd)">Productos</th>
+              <th style="padding:6px 10px;border-bottom:1px solid var(--brd)">Emisión</th>
+              <th style="padding:6px 10px;border-bottom:1px solid var(--brd)">Venc.</th>
+              <th style="padding:6px 10px;border-bottom:1px solid var(--brd)">Mon.</th>
+              <th style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--brd)">Importe</th>
+              <th style="padding:6px 10px;text-align:right;border-bottom:1px solid var(--brd)">Saldo</th>
+              <th style="padding:6px 10px;border-bottom:1px solid var(--brd)">Estado</th>
+            </tr></thead>
+            <tbody>${fs.map((f,i)=>{
+              const e=estF(f),s=saldo(f);
+              const items=f.items&&f.items.length
+                ?f.items.map(it=>`${it.desc||'—'}${it.cant?' × '+fNp(it.cant)+(it.present?' '+it.present:''):''}`).join(' | ')
+                :f.nota||'—';
+              return `<tr style="${i%2===0?'background:#fafafa':''}">
+                <td style="padding:5px 10px;border-bottom:1px solid var(--brd);font-weight:500">${f.prov}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid var(--brd);font-family:monospace">${f.nro}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid var(--brd);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${items}">${items}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid var(--brd);white-space:nowrap">${fD(f.emis)}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid var(--brd);white-space:nowrap">${fD(f.venc)}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid var(--brd)">${f.mon}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid var(--brd);text-align:right">${fNp(f.imp)}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid var(--brd);text-align:right;font-weight:600;color:${e==='pagado'?'var(--grn)':'var(--red)'}">${fNp(s)}</td>
+                <td style="padding:5px 10px;border-bottom:1px solid var(--brd)"><span class="badge ${e==='contado'?'b-ctdo':e==='pagado'?'b-pago':e==='vencido'?'b-venc':'b-pend'}">${e==='contado'?'Contado':e.charAt(0).toUpperCase()+e.slice(1)}</span></td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>
+        </div>
+      </div>`;
+    });
+
+    cont.innerHTML=html;
     return;
   }
 }
