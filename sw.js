@@ -1,5 +1,5 @@
 // Service Worker — Sistema Gestión
-const CACHE = 'sg-v1';
+const CACHE = 'sg-v2';
 const ASSETS = ['/'];
 
 self.addEventListener('install', e => {
