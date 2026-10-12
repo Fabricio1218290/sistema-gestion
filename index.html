@@ -543,37 +543,37 @@ tr:hover td{background:#f8faff;transition:background .1s}
   <div style="display:flex;flex-direction:column;gap:0;border:1px solid var(--brd);border-radius:var(--rad-lg);overflow:hidden;margin-bottom:20px">
     <!-- Proveedor -->
     <div style="display:grid;grid-template-columns:160px 1fr;align-items:center;border-bottom:1px solid var(--brd)">
-      <div style="padding:11px 16px;background:var(--bg2);font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.4px;border-right:1px solid var(--brd)">Proveedor *</div>
-      <div style="padding:6px 12px;position:relative">
+      <div style="padding:11px 16px;background:#dde3ea;font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:.4px;border-right:1px solid var(--brd)">Proveedor *</div>
+      <div style="padding:6px 12px;position:relative;background:#fff">
         <input id="a-prov" type="text" placeholder="Nombre del proveedor" autocomplete="off" oninput="provAC(this)" onkeydown="provACKey(event)" onfocus="provAC(this)" style="border:none;outline:none;width:100%;background:transparent;font-size:13px;color:var(--txt)">
         <div id="a-prov-list" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg);border:0.5px solid var(--brd2);border-radius:var(--rad);z-index:99;box-shadow:0 4px 12px rgba(0,0,0,0.12);max-height:200px;overflow-y:auto"></div>
       </div>
     </div>
     <!-- N° Factura -->
     <div style="display:grid;grid-template-columns:160px 1fr;align-items:center;border-bottom:1px solid var(--brd)">
-      <div style="padding:11px 16px;background:var(--bg2);font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.4px;border-right:1px solid var(--brd)">N° Factura *</div>
-      <div style="padding:6px 12px">
+      <div style="padding:11px 16px;background:#dde3ea;font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:.4px;border-right:1px solid var(--brd)">N° Factura *</div>
+      <div style="padding:6px 12px;background:#fff">
         <input id="a-nro" type="text" placeholder="0001-00000001" onblur="chkDupFact()" style="border:none;outline:none;width:100%;background:transparent;font-size:13px;color:var(--txt)">
       </div>
     </div>
     <!-- Moneda -->
     <div style="display:grid;grid-template-columns:160px 1fr;align-items:center;border-bottom:1px solid var(--brd)">
-      <div style="padding:11px 16px;background:var(--bg2);font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.4px;border-right:1px solid var(--brd)">Moneda *</div>
-      <div style="padding:6px 12px">
+      <div style="padding:11px 16px;background:#dde3ea;font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:.4px;border-right:1px solid var(--brd)">Moneda *</div>
+      <div style="padding:6px 12px;background:#fff">
         <select id="a-mon" onchange="calcTotal()" style="border:none;outline:none;background:transparent;font-size:13px;color:var(--txt);cursor:pointer;width:100%"><option value="USD">USD – Dólares</option><option value="UYU">UYU – Pesos uruguayos</option></select>
       </div>
     </div>
     <!-- Fecha -->
     <div style="display:grid;grid-template-columns:160px 1fr;align-items:center;border-bottom:1px solid var(--brd)">
-      <div style="padding:11px 16px;background:var(--bg2);font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.4px;border-right:1px solid var(--brd)">Fecha emisión *</div>
-      <div style="padding:6px 12px">
+      <div style="padding:11px 16px;background:#dde3ea;font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:.4px;border-right:1px solid var(--brd)">Fecha emisión *</div>
+      <div style="padding:6px 12px;background:#fff">
         <input id="a-emis" type="date" style="border:none;outline:none;background:transparent;font-size:13px;color:var(--txt)">
       </div>
     </div>
     <!-- Condición de pago -->
     <div style="display:grid;grid-template-columns:160px 1fr;align-items:center">
-      <div style="padding:11px 16px;background:var(--bg2);font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.4px;border-right:1px solid var(--brd)">Condición pago *</div>
-      <div style="padding:10px 12px;display:flex;gap:20px">
+      <div style="padding:11px 16px;background:#dde3ea;font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:.4px;border-right:1px solid var(--brd)">Condición pago *</div>
+      <div style="padding:10px 12px;display:flex;gap:20px;background:#fff">
         <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:500;color:var(--txt)">
           <input type="radio" name="a-cond" value="credito" checked="" onchange="aToggleCond()"> Crédito
         </label>
