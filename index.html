@@ -9882,7 +9882,7 @@ async function init(){
   try{
     setMsg('Conectando con la nube...',20);
     const row=await supaCargar();
-    if(row){
+    if(row && row.facturas && row.facturas.length>0){
       _rowId=row.id;
       setMsg('Cargando datos...',60);
       if(row.facturas)facturas=row.facturas;
@@ -9931,8 +9931,9 @@ async function init(){
       if(row.nx_mov_s)nxMovS=row.nx_mov_s;
       if(row.nx_ot)nxOT=row.nx_ot;
     } else {
-      // Primera vez: sin datos en Supabase — cargar embebidos y subir
-      setMsg('Primera vez: preparando datos...',40);
+      // Sin datos válidos en Supabase — cargar embebidos y subir
+      setMsg('Cargando datos locales...',40);
+      if(row && row.id) { _rowId=row.id; } // guardar id aunque esté vacío
       loadEmb();
       setMsg('Subiendo datos a la nube...',70);
       try{ await guardarArchivo(true); }catch(e2){ console.warn('Fallo al subir datos iniciales:',e2); }
