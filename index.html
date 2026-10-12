@@ -9889,7 +9889,8 @@ async function init(){
     setMsg('Conectando con la nube...',20);
     const row=await supaCargar();
     console.log('[INIT] Supabase row:', row ? 'encontrada, facturas:' + (row.facturas?.length||0) : 'vacía');
-    if(row && row.facturas && row.facturas.length>0){
+    const embCount = (typeof _datos!=='undefined'&&_datos&&_datos.facturas)?_datos.facturas.length:0;
+    if(row && row.facturas && row.facturas.length>0 && row.facturas.length>=embCount){
       _rowId=row.id;
       setMsg('Cargando datos...',60);
       if(row.facturas)facturas=row.facturas;
@@ -9938,8 +9939,8 @@ async function init(){
       if(row.nx_mov_s)nxMovS=row.nx_mov_s;
       if(row.nx_ot)nxOT=row.nx_ot;
     } else {
-      // Supabase vacío — ya cargamos embebidos arriba, solo subimos a Supabase
-      setMsg('Subiendo datos a la nube...',70);
+      // Supabase vacío o desactualizado — ya cargamos embebidos arriba, actualizamos Supabase
+      setMsg('Actualizando datos en la nube...',70);
       if(row && row.id) { _rowId=row.id; }
       try{ await guardarArchivo(true); }catch(e2){ console.warn('Fallo al subir datos iniciales:',e2); }
     }
