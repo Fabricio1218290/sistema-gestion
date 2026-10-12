@@ -414,11 +414,18 @@ tr:hover td{background:#f8faff;transition:background .1s}
 .saldo-bar{height:4px;border-radius:3px;margin-top:8px;background:var(--bg3)}
 .saldo-fill{height:4px;border-radius:3px}
 .hf{display:none}
+#sb-toggle{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--txt);padding:4px 8px;line-height:1}
+#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199}
 @media(max-width:768px){
-  #sidebar{width:60px;min-width:60px}
+  #sb-toggle{display:block}
+  #sidebar{position:fixed;left:-240px;top:0;height:100%;width:240px;min-width:240px;z-index:200;transition:left .25s ease;box-shadow:none}
+  #sidebar.sb-open{left:0;box-shadow:4px 0 24px rgba(0,0,0,.3)}
+  #sidebar.sb-open~* #sb-overlay,#sb-overlay.active{display:block}
   #sidebar .sb-label,.nb span,.logo-text,.logo-sub,#sidebar-footer{display:none}
-  #main{margin-left:60px}
+  #sidebar.sb-open .sb-label,#sidebar.sb-open .nb span,#sidebar.sb-open .logo-text,#sidebar.sb-open .logo-sub,#sidebar.sb-open #sidebar-footer{display:unset}
+  #main{margin-left:0}
   .nb{justify-content:center;padding:10px}
+  #sidebar.sb-open .nb{justify-content:flex-start;padding:10px 16px}
   .fg,.fg3{grid-template-columns:1fr}.s2,.s3{grid-column:span 1}.kpis{grid-template-columns:1fr 1fr}
   .wrap{padding:16px}
 }
@@ -477,6 +484,8 @@ tr:hover td{background:#f8faff;transition:background .1s}
   </div>
 </header>
 
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div id="sb-overlay" onclick="toggleSidebar()"></div>
 <!-- SIDEBAR -->
 <nav id="sidebar">
   <div id="sidebar-logo">
@@ -549,6 +558,7 @@ tr:hover td{background:#f8faff;transition:background .1s}
 <!-- MAIN -->
 <div id="main">
 <div id="topbar">
+  <button id="sb-toggle" onclick="toggleSidebar()" title="Menú">☰</button>
   <span id="topbar-title">Nueva Factura</span>
   <div id="topbar-actions">
     <button onclick="oM('m-config')" title="Configuración">⚙ Config</button>
@@ -5577,6 +5587,12 @@ function loginCambiarClave() {
 }
 // ===========================
 
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sb-overlay');
+  sb.classList.toggle('sb-open');
+  ov.classList.toggle('active');
+}
 function oM(id){
   if(id==='m-ejercicios'){renderEjLista();}
   if(id==='m-adelanto'){
