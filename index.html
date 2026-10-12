@@ -118,6 +118,9 @@ async function ejecutarImportacion() {
 // ===========================
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>SISTEMA GESTION</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -9878,10 +9881,14 @@ async function init(){
   const setMsg=(m,p)=>{const el=document.getElementById('_load_msg');if(el)el.textContent=m;const bar=document.getElementById('_load_bar');if(bar)bar.style.width=p+'%';};
 
   try{
-  // Intentar cargar desde Supabase primero
+  // Cargar datos embebidos primero (garantía de datos)
+  loadEmb();
+  console.log('[INIT] Datos embebidos cargados:', facturas.length, 'facturas');
+  // Intentar cargar desde Supabase (sobreescribe si tiene datos reales)
   try{
     setMsg('Conectando con la nube...',20);
     const row=await supaCargar();
+    console.log('[INIT] Supabase row:', row ? 'encontrada, facturas:' + (row.facturas?.length||0) : 'vacía');
     if(row && row.facturas && row.facturas.length>0){
       _rowId=row.id;
       setMsg('Cargando datos...',60);
@@ -9931,17 +9938,15 @@ async function init(){
       if(row.nx_mov_s)nxMovS=row.nx_mov_s;
       if(row.nx_ot)nxOT=row.nx_ot;
     } else {
-      // Sin datos válidos en Supabase — cargar embebidos y subir
-      setMsg('Cargando datos locales...',40);
-      if(row && row.id) { _rowId=row.id; } // guardar id aunque esté vacío
-      loadEmb();
+      // Supabase vacío — ya cargamos embebidos arriba, solo subimos a Supabase
       setMsg('Subiendo datos a la nube...',70);
+      if(row && row.id) { _rowId=row.id; }
       try{ await guardarArchivo(true); }catch(e2){ console.warn('Fallo al subir datos iniciales:',e2); }
     }
   } catch(eNube){
-    console.warn('Supabase no disponible, usando datos locales:', eNube);
+    console.warn('Supabase no disponible, usando datos embebidos:', eNube);
     setMsg('Sin conexion — datos locales',50);
-    loadEmb();
+    // Ya cargamos embebidos arriba, no hace falta hacer nada más
   }
   setMsg('Iniciando...',90);
   if(!ejercicios||!ejercicios.length){
